@@ -6,10 +6,10 @@ import BondsPreset as bp
 import SBHM as s
 import BondsDeform as bd
 
-struture_type = 'Si111+O2'
+struture_type = 'WS2+H2O'
 StructProp_o = bp.BondsPreset(struture_type)
 
-def fitness_func_set(OptPar ,data, solution_noads):
+def fitness_func_set(OptPar ,data, solution_noads,Kin, Ein):
     # x, ysmooth
     x = data['x']
     desired_output = data['ySmooth']
@@ -18,7 +18,7 @@ def fitness_func_set(OptPar ,data, solution_noads):
 
     def fitness_func(solution, solution_idx):
         StructProp_d = parameter_substitution(solution,solution_noads)     
-        fit_output = s.SBHM(OptPar,StructProp_o,StructProp_d,x)
+        fit_output = s.SBHM(OptPar,StructProp_o,StructProp_d,x,Kin, Ein)
 
         fitness = np.sqrt(
                           1/(
@@ -32,9 +32,9 @@ def func_generation(ga_instance):
     global fitness_check
     
     if ga_instance.generations_completed == 1:
-        print('First')
+        # print('First')
         fitness_check = 0.00001
-    if (ga_instance.generations_completed % 500) == 0:
+    if (ga_instance.generations_completed % 2000) == 0:
         if np.abs((ga_instance.best_solution()[1] - fitness_check)/fitness_check) <= 1e-5 :
             return "stop"
         else :
@@ -48,6 +48,7 @@ def parameter_substitution(solution,solution_noads):
     
     #from_no_adsorption
     phi0 = solution_noads[0]  
+    au = solution_noads[1]
     ad = solution_noads[2]      
     ab = solution_noads[3]        
     def_theta = solution_noads[4]
@@ -56,8 +57,8 @@ def parameter_substitution(solution,solution_noads):
     tilt_dir = solution_noads[7]   
     tilt_angle = solution_noads[8]
     
-    StructProp_s['phi0'] = phi0   
-    StructProp_s['alpha_u'] = solution[0]
+    StructProp_s['phi0'] = solution[0]                            #phi0  for the original 
+    StructProp_s['alpha_u'] = au
     StructProp_s['alpha_d'] = ad
     StructProp_s['alpha_b'] = ab
     StructProp_s['alpha_ads'] = solution[1]                      # for adsorption
@@ -78,24 +79,24 @@ def parameter_substitution(solution,solution_noads):
     StructProp_d = bd.Deformation(defProp,TiltProp, StructProp_s)
     return StructProp_d
 
-def output_from_solution(solution, OptPar, data,solution_noads):
+def output_from_solution(solution, OptPar, data,solution_noads,Kin, Ein):
     StructProp_d = parameter_substitution(solution,solution_noads)
-    output = s.SBHM(OptPar,StructProp_o,StructProp_d,data['x'])
+    output = s.SBHM(OptPar,StructProp_o,StructProp_d,data['x'],Kin, Ein)
     
     return output
         
-def pygad_fit(OptPar, data, solution_noads):
+def pygad_fit(OptPar, data, solution_noads,Kin, Ein):
     ysm = data['ySmooth']
     # symmetry = bp.BondsPreset(struture_type)['symmetry']
     # max alpha (for surface & bulk)
     a_max = (np.max(ysm))*1
     
-    fitness_func = fitness_func_set(OptPar, data, solution_noads)
+    fitness_func = fitness_func_set(OptPar, data, solution_noads,Kin, Ein)
 
     # Number of solutions (i.e. chromosomes) within the population.
     sol_per_pop  = 20 ###灑幾個點
     # Number of genes in the solution/chromosome.
-    num_generations = 6000
+    num_generations = 500
     parent_selection_type = "tournament"
     K_tournament = 3
     #Number of solutions to be selected as parents.
@@ -111,20 +112,21 @@ def pygad_fit(OptPar, data, solution_noads):
 
     # Par=[au, alpha_ads ,TiltDirectionAngle_ads, TiltAngle_ads, ads_phi0  ]
     initial_population = np.concatenate((
-        [np.random.uniform(low=0, high=a_max, size=sol_per_pop )],              #au
-        [np.random.uniform(low=-a_max/10, high=a_max/10, size=sol_per_pop )],   # alpha_ads
+        [np.random.uniform(low=46, high=46, size=sol_per_pop )],                #phi0
+        #au  using the same as the orignal sample
+        [np.random.uniform(low=-a_max, high=a_max, size=sol_per_pop )],         # alpha_ads
         [np.random.uniform(low=0, high=0, size=sol_per_pop )],                  #TiltDirectionAngle for adsorption
         [np.random.uniform(low=0, high=0, size=sol_per_pop )],                  #TiltAngle for adsorption
-        [np.random.uniform(low=0, high=0, size=sol_per_pop )]),                 # ads_phi0
+        [np.random.uniform(low=0, high=30, size=sol_per_pop )]),               # ads_phi0
         axis=0).T
     
     gene_space = [
-
-        {'low':0,'high':a_max},            # au
-        {'low':-a_max/10,'high':a_max/10}, # alpha_ads
+        {'low':48,'high':48.2},              #phi0
+        #au  using the same as the orignal sample
+        {'low':-a_max,'high':a_max}, # alpha_ads -a_max~a_max
         {'low':0,'high':0},                # TiltDirectionAngle for adsorption
         {'low':0,'high':0},                # TiltAngle for adsorption
-        {'low':0,'high':0}                 # ads_phi0
+        {'low':0,'high':30}               # ads_phi0
         ] 
     
     ga_instance = pygad.GA(
@@ -151,11 +153,12 @@ def pygad_fit(OptPar, data, solution_noads):
     
     solution, fval, solution_idx = ga_instance.best_solution()
 
-    print("Fitted parameters [au, alpha_ads ,TiltDirectionAngle_ads, TiltAngle_ads, ads_phi0  ]:")
+    print("Adsoprtion fitting:fitted parameters [phi0 ,alpha_adsorption,TiltDirectionAngle_ads, TiltAngle_ads, ads_phi0  ]:")
     print("  ".join('{sol:.2f}'.format(sol=k) for k in solution))
     print("Fitness value of the best solution = {solution_fitness}".format(solution_fitness=fval))
     print("Number of generations passed is {generations_completed}".format(generations_completed=ga_instance.generations_completed))
-    ysi = output_from_solution(solution, OptPar, data,solution_noads)
+    print("==========================================================")
+    ysi = output_from_solution(solution, OptPar, data,solution_noads,Kin, Ein)
     
     return ysi, fval, solution 
 
@@ -174,7 +177,7 @@ if __name__ == '__main__':
     gDataOpt = {
         # % Number of column x/y-value at
         'XCol': 0,
-        'YCol': 2,
+        'YCol': 1,
         # % X-value adjustment
         'XAdj': 1,
         'Total Col': 3,
@@ -201,24 +204,24 @@ if __name__ == '__main__':
      #Get Polarization
     if np.any(np.array(
             os.path.splitext(gDataOpt['load_file_name'])[0].split('_')) == 'ss'):
-        OptPar = opp.OpticParamPreset('ss')
+        OptPar,Kin, Ein = opp.OpticParamPreset('ss')
     elif np.any(np.array(
             os.path.splitext(gDataOpt['load_file_name'])[0].split('_')) == 'sp'):
-        OptPar = opp.OpticParamPreset('sp')    
+        OptPar,Kin, Ein = opp.OpticParamPreset('sp')    
     elif np.any(np.array(
             os.path.splitext(gDataOpt['load_file_name'])[0].split('_')) == 'ps'):
-        OptPar = opp.OpticParamPreset('ps')
+        OptPar,Kin, Ein = opp.OpticParamPreset('ps')
     elif np.any(np.array(
             os.path.splitext(gDataOpt['load_file_name'])[0].split('_')) == 'pp'):
-        OptPar = opp.OpticParamPreset('pp') 
+        OptPar,Kin, Ein = opp.OpticParamPreset('pp') 
     else:
-        OptPar = opp.OpticParamPreset('pp')
+        OptPar,Kin, Ein = opp.OpticParamPreset('pp')
 
-    data = gd.GetRawData(gDataOpt)
+    data = gd.GetRawData(gDataOpt) 
     data_ads = gd.GetRawData(gDataOpt_ads)
-    for i in range(1):
-        
-        [data['ysi'],data['fval'],data['solution']] = f.pygad_fit(OptPar, data)
+    for i in range(3):
+        print('The',(i+1),'time fitting:')
+        [data['ysi'],data['fval'],data['solution']] = f.pygad_fit(OptPar, data,Kin, Ein)
         data['solution'] = np.append(data['solution'],data['fval'])
         ax = plt.subplots()[1]
         plt.plot(data['x'],data['yRaw'],'.',
@@ -231,21 +234,22 @@ if __name__ == '__main__':
         gd.SaveFitData(data,gDataOpt)
         
 # For adsorption        
-        [data_ads['ysi'],data_ads['fval'],data_ads['solution']] = pygad_fit(OptPar, data_ads, data['solution'])
+        [data_ads['ysi'],data_ads['fval'],data_ads['solution']] = pygad_fit(OptPar, data_ads, data['solution'],Kin, Ein)
+        # print('\nfunciton fitting soultion[2] ans check:',data_ads['solution'][2])
         # cProfile.run("[data['ysi'],data['fval'],data['solution']] = pygad_fit(OptPar, data)")
-        data_ads['solution'] = np.array([data['solution'][0],data_ads['solution'][0],data['solution'][2],data['solution'][3],\
+        data_ads['solution'] = np.array([data_ads['solution'][0],data['solution'][0],data['solution'][1],data['solution'][2],data['solution'][3],\
               data['solution'][4],data['solution'][5],data['solution'][6],data['solution'][7],data['solution'][8],\
                   data_ads['solution'][1],data_ads['solution'][2],data_ads['solution'][3],data_ads['solution'][4],data_ads['fval']])
             
         ax = plt.subplots()[1]
         plt.plot(data_ads['x'],data_ads['yRaw'],'.',
-                 data_ads['x'],data_ads['ySmooth'],'-',
-                 data_ads['x'],data_ads['ysi'])
+                  data_ads['x'],data_ads['ySmooth'],'-',
+                  data_ads['x'],data_ads['ysi'])
         plt.title(gDataOpt_ads['load_file_name'].split('/')[-1])
         #show fval in plot
         plt.text(1.01, 0.98, 'fval = '+ str(round(data_ads['fval'],3)), transform = ax.transAxes)
         plt.show()
         gd.SaveFitData_ads(data_ads,gDataOpt_ads)
-        
+        # 
     t2 = time.time()
     print("Time is", t2-t1)

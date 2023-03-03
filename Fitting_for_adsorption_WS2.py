@@ -97,27 +97,27 @@ def pygad_fit(OptPar, data, Kin, Ein):
     
     # Par=[phi0,au,ad,ab,defdir_theta,defdir_phi,defRatio, TiltDirectionAngle, TiltAngle]
     initial_population = np.concatenate((
-        [np.random.uniform(low=0, high=360, size=sol_per_pop )],       #phi0
-        [np.random.uniform(low=-a_max/2, high=a_max/2, size=sol_per_pop )],            #au
-        [np.random.uniform(low=0, high=0, size=sol_per_pop )],                  #ad
-        [np.random.uniform(low=323.29, high=323.29, size=sol_per_pop )],           #ab 0,a_max/5
-        [np.random.uniform(low=90, high=90, size=sol_per_pop )],                #defdir_theta  ##跟defdir_phi 互補
-        [np.random.uniform(low=0, high=0, size=sol_per_pop )],                #defdir_phi
-        [np.random.uniform(low=0, high=0, size=sol_per_pop )],                  #defRatio
-        [np.random.uniform(low=262.87, high=262.87, size=sol_per_pop )],                #TiltDirectionAngle 0~360
-        [np.random.uniform(low=0.71, high=0.71, size=sol_per_pop )]),                 #TiltAngle ##跟TiltDirectionAngle 互補 0~5
+        [np.random.uniform(low=0, high=360, size=sol_per_pop )],            #phi0
+        [np.random.uniform(low=-a_max/2, high=a_max/2, size=sol_per_pop )], #au
+        [np.random.uniform(low=0, high=0, size=sol_per_pop )],              #ad
+        [np.random.uniform(low=323.29, high=323.29, size=sol_per_pop )],    #ab 0,a_max/5
+        [np.random.uniform(low=90, high=90, size=sol_per_pop )],            #defdir_theta  ##跟defdir_phi 互補
+        [np.random.uniform(low=0, high=0, size=sol_per_pop )],              #defdir_phi
+        [np.random.uniform(low=0, high=0, size=sol_per_pop )],              #defRatio
+        [np.random.uniform(low=262.87, high=262.87, size=sol_per_pop )],    #TiltDirectionAngle 0~360
+        [np.random.uniform(low=0.71, high=0.71, size=sol_per_pop )]),       #TiltAngle ##跟TiltDirectionAngle 互補 0~5
         axis=0).T
     
     gene_space = [
         {'low':0,'high':360},       # phi0   ##### None #0~360
-        {'low':-a_max/2,'high':a_max/2},            # au
+        {'low':-a_max/2,'high':a_max/2},     # au
         {'low':0,'high':0},                  # ad
-        {'low':323.29,'high':323.29},           # ab
-        {'low':90,'high':90},                 # defdir theta
-        {'low':0,'high':0},                # defdir phi
-        {'low':0,'high':0},                 # defRatio
-        {'low':262.87,'high':262.87},                # TiltDirectionAngle
-        {'low':0.71,'high':0.71}                   # TiltAngle
+        {'low':323.29,'high':323.29},        # ab
+        {'low':90,'high':90},                # defdir theta
+        {'low':0,'high':0},                  # defdir phi
+        {'low':0,'high':0},                  # defRatio
+        {'low':262.87,'high':262.87},        # TiltDirectionAngle
+        {'low':0.71,'high':0.71}             # TiltAngle
         ]
     
     
@@ -160,7 +160,6 @@ if __name__ == '__main__':
     from tkinter import Tk     # from tkinter import Tk for Python 3.x
     from tkinter.filedialog import askopenfilename
     import os
-    import cProfile
     import time
     t1 = time.time()
     gDataOpt = {

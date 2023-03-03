@@ -32,7 +32,7 @@ def func_generation(ga_instance):
     global fitness_check
     
     if ga_instance.generations_completed == 1:
-        print('First')
+        # print('First')
         fitness_check = 0.00001
     if (ga_instance.generations_completed % 200000) == 0:
         if np.abs((ga_instance.best_solution()[1] - fitness_check)/fitness_check) <= 1e-5 :
@@ -78,7 +78,7 @@ def pygad_fit(OptPar, data, Kin, Ein):
     # Number of solutions (i.e. chromosomes) within the population.
     sol_per_pop  = 30 ###灑幾個點
     # Number of genes in the solution/chromosome.
-    num_generations = 300
+    num_generations = 200
     parent_selection_type = "tournament"
     K_tournament = 3
     #Number of solutions to be selected as parents.
@@ -100,24 +100,24 @@ def pygad_fit(OptPar, data, Kin, Ein):
         [np.random.uniform(low=0, high=360, size=sol_per_pop )],       #phi0
         [np.random.uniform(low=-a_max/2, high=a_max/2, size=sol_per_pop )],            #au
         [np.random.uniform(low=0, high=0, size=sol_per_pop )],                  #ad
-        [np.random.uniform(low=323.29, high=323.29, size=sol_per_pop )],           #ab 0,a_max/5
+        [np.random.uniform(low=0, high=a_max/5, size=sol_per_pop )],           #ab 0,a_max/5
         [np.random.uniform(low=90, high=90, size=sol_per_pop )],                #defdir_theta  ##跟defdir_phi 互補
         [np.random.uniform(low=0, high=0, size=sol_per_pop )],                #defdir_phi
         [np.random.uniform(low=0, high=0, size=sol_per_pop )],                  #defRatio
-        [np.random.uniform(low=262.87, high=262.87, size=sol_per_pop )],                #TiltDirectionAngle 0~360
-        [np.random.uniform(low=0.71, high=0.71, size=sol_per_pop )]),                 #TiltAngle ##跟TiltDirectionAngle 互補 0~5
+        [np.random.uniform(low=0, high=360, size=sol_per_pop )],                #TiltDirectionAngle 0~360
+        [np.random.uniform(low=0, high=5, size=sol_per_pop )]),                 #TiltAngle ##跟TiltDirectionAngle 互補 0~5
         axis=0).T
     
     gene_space = [
         {'low':0,'high':360},       # phi0   ##### None #0~360
-        {'low':-a_max/2,'high':a_max/2},            # au
+        {'low':-a_max/2,'high':a_max},            # au
         {'low':0,'high':0},                  # ad
-        {'low':323.29,'high':323.29},           # ab
+        {'low':0,'high':a_max/5},           # ab 0~a_max/5
         {'low':90,'high':90},                 # defdir theta
         {'low':0,'high':0},                # defdir phi
         {'low':0,'high':0},                 # defRatio
-        {'low':262.87,'high':262.87},                # TiltDirectionAngle
-        {'low':0.71,'high':0.71}                   # TiltAngle
+        {'low':0,'high':360},                # TiltDirectionAngle
+        {'low':0,'high':5}                   # TiltAngle
         ]
     
     
@@ -149,6 +149,7 @@ def pygad_fit(OptPar, data, Kin, Ein):
     print("  ".join('{sol:.2f}'.format(sol=k) for k in solution))
     print("Fitness value of the best solution = {solution_fitness}".format(solution_fitness=fval))
     print("Number of generations passed is {generations_completed}".format(generations_completed=ga_instance.generations_completed))
+    print('-------------------------------------------------------------------')
     ysi = output_from_solution(solution, OptPar, data, Kin, Ein)
     
     return ysi, fval, solution 
@@ -160,13 +161,12 @@ if __name__ == '__main__':
     from tkinter import Tk     # from tkinter import Tk for Python 3.x
     from tkinter.filedialog import askopenfilename
     import os
-    import cProfile
     import time
     t1 = time.time()
     gDataOpt = {
         # % Number of column x/y-value at
         'XCol': 0,
-        'YCol': 1,
+        'YCol': 2,
         # % X-value adjustment
         'XAdj': 1,
         'Total Col': 3,
@@ -199,7 +199,7 @@ if __name__ == '__main__':
         OptPar, Kin, Ein  = opp.OpticParamPreset('pp')
 
     data = gd.GetRawData(gDataOpt)
-    for i in range(5):
+    for i in range(3):
 
         [data['ysi'],data['fval'],data['solution']] = pygad_fit(OptPar, data, Kin, Ein)
         #cProfile.run("[data['ysi'],data['fval'],data['solution']] = pygad_fit(OptPar, data, Kin, Ein)")

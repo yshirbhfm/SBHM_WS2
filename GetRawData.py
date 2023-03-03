@@ -47,8 +47,8 @@ def SaveFitData_ads(data,gDataOpt):
     data_to_save = np.array([
         data['x'],data['yRaw'],data['ySmooth'],data['ysi']]).T
     df = pd.DataFrame(data_to_save,columns=['x','yRaw','ySmooth','ysi'])
-    df['name'] = pd.Series(['phi0', 'au', 'ad', 'ab', 'def_theta', 'def_phi', 'def_ratio', 'Tilt_Direction', 'Tilt_Angle', \
-                            'alpha_ads' ,'TiltDirectionAngle_ads', 'TiltAngle_ads', 'ads_phi0', 'fval'])
+    df['name'] = pd.Series(['ad_phi0','orignal_phi0', 'au', 'ad', 'ab', 'def_theta', 'def_phi', 'def_ratio', 'Tilt_Direction', 'Tilt_Angle', \
+                            'alpha_ads' ,'TiltDirectionAngle_ads', 'TiltAngle_ads', 'gas_phi0', 'fval'])
     df['solution']=pd.Series(data['solution'])
     df.to_csv(gDataOpt['save_file_name'], header=None, index=None, sep='\t')
     

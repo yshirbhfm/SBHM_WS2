@@ -35,6 +35,7 @@ def SBHM(OptPar,StructProp_o, StructProp_d,xDeg, Kin, Ein):
     # For adsorption
     if 'bonds_adsorption' in StructProp_d:    
         bonds_ads = StructProp_d['bonds_adsorption']
+        noBonds_ads=bonds_ads.shape[0]
         x_ads = (xDeg + StructProp_d['phi0'] + StructProp_d['bonds_adsorption_phi0'])/180*np.pi 
         Rz_ads = np.array([[np.cos(x_ads),-np.sin(x_ads),np.zeros_like(x_ads)],
                         [np.sin(x_ads),np.cos(x_ads),np.zeros_like(x_ads)],
@@ -82,8 +83,7 @@ def SBHM(OptPar,StructProp_o, StructProp_d,xDeg, Kin, Ein):
     # Ein[0] -> adsorption only happened at surface 
     if 'bonds_adsorption' in StructProp_d:    
         
-        Padsorption = (np.dot(araBond_ads,Ein[0]).reshape(noXpts,noBonds,-1))**2 *araBond_ads
-        print(Ein[0])
+        Padsorption = (np.dot(araBond_ads,Ein[0]).reshape(noXpts,noBonds_ads,-1))**2 *araBond_ads
         aPadsorption = StructProp_d['alpha_ads'] * Padsorption
         Isum = lo.Fresnel_SH_ads(OptPar,P_total,aPadsorption,Kin)
     else :

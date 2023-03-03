@@ -71,7 +71,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     
     # from SBHMFitPy import BondsPreset
-    struture_type = 'Si111'
+    struture_type = 'WS2+H2O'
     StructProp_o = bp.BondsPreset(struture_type)
 
     defProp={
